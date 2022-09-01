@@ -23,7 +23,7 @@ bool CWinSystemGbmEGLContext::InitWindowSystemEGL(EGLint renderableType, EGLint 
     return false;
   }
 
-  if (!m_eglContext.CreatePlatformDisplay(m_GBM->GetDevice()->Get(), m_GBM->GetDevice()->Get()))
+  if (!m_eglContext.CreatePlatformDisplay(m_GBM->GetDevice()->Get(), reinterpret_cast<EGLNativeDisplayType>(m_GBM->GetDevice()->Get())))
   {
     return false;
   }
