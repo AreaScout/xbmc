@@ -187,7 +187,7 @@ bool CDRMUtils::FindPlanes()
     auto videoPlane = std::find_if(m_planes.begin(), m_planes.end(), [&i](auto& plane) {
       if (plane->GetPossibleCrtcs() & (1 << i))
       {
-        return plane->SupportsFormat(DRM_FORMAT_NV12);
+        return (plane->SupportsFormat(DRM_FORMAT_NV12) || plane->SupportsFormat(DRM_FORMAT_XRGB8888));
       }
       return false;
     });
