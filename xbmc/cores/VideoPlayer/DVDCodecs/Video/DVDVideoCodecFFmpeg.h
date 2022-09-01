@@ -95,6 +95,7 @@ protected:
   bool m_requestSkipDeint = false;
   int m_codecControlFlags = 0;
   bool m_interlaced = false;
+  bool m_useSoftDecoder = true;
   double m_DAR = 1.0;
   CDVDStreamInfo m_hints;
   CDVDCodecOptions m_options;

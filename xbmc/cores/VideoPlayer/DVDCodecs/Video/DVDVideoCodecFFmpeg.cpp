@@ -43,6 +43,16 @@ extern "C" {
 #define RINT lrint
 #endif
 
+/* define the FFMPEG codecs to use */
+#define MPEG2TS_FFMPEG_CODEC "mpeg2_v4l2m2m"
+#define H263_FFMPEG_CODEC    "h263_v4l2m2m"
+#define H264_FFMPEG_CODEC    "h264_v4l2m2m"
+#define MPEG4_FFMPEG_CODEC   "mpeg4_v4l2m2m"
+#define MPEG1_FFMPEG_CODEC   "mpeg1_v4l2m2m"
+#define MPEG2_FFMPEG_CODEC   "mpeg2_v4l2m2m"
+#define VC1_FFMPEG_CODEC     "vc1_v4l2m2m"
+#define VP8_FFMPEG_CODEC     "vp8_v4l2m2m"
+
 enum DecoderState
 {
   STATE_NONE,
@@ -328,7 +338,45 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
   m_hints = hints;
   m_options = options;
 
-  AVCodec* pCodec;
+  AVCodec* pCodec = nullptr;
+
+  if(CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_USESOFTWAREDECODER) || m_useSoftDecoder)
+  {
+    goto software;
+  }
+
+  switch(hints.codec)
+  {
+    case AV_CODEC_ID_MPEG4:
+      pCodec = avcodec_find_decoder_by_name(MPEG4_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_MPEG2TS:
+      pCodec = avcodec_find_decoder_by_name(MPEG2_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_H263:
+      pCodec = avcodec_find_decoder_by_name(H263_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_H264:
+      pCodec = avcodec_find_decoder_by_name(H264_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_MPEG1VIDEO:
+      pCodec = avcodec_find_decoder_by_name(MPEG1_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_MPEG2VIDEO:
+      pCodec = avcodec_find_decoder_by_name(MPEG2_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_VC1:
+      pCodec = avcodec_find_decoder_by_name(VC1_FFMPEG_CODEC);
+      break;
+    case AV_CODEC_ID_VP8:
+      pCodec = avcodec_find_decoder_by_name(VP8_FFMPEG_CODEC);
+      break;
+    default:
+      pCodec = avcodec_find_decoder(hints.codec);
+      break;
+  }
+
+software:
 
   m_iOrientation = hints.orientation;
 
@@ -338,7 +386,8 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
   m_processInfo.SetSwDeinterlacingMethods();
   m_processInfo.SetVideoInterlaced(false);
 
-  pCodec = avcodec_find_decoder(hints.codec);
+  if(pCodec == NULL)
+    pCodec = avcodec_find_decoder(hints.codec);
 
   if(pCodec == NULL)
   {
@@ -438,7 +487,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
   }
 
   UpdateName();
-  const char* pixFmtName = av_get_pix_fmt_name(m_pCodecContext->pix_fmt);
+  const char* pixFmtName = av_get_pix_fmt_name(GetFormat(m_pCodecContext, &m_pCodecContext->pix_fmt));
   m_processInfo.SetVideoDimensions(m_pCodecContext->coded_width, m_pCodecContext->coded_height);
   m_processInfo.SetVideoPixelFormat(pixFmtName ? pixFmtName : "");
 
@@ -516,15 +565,22 @@ void CDVDVideoCodecFFmpeg::SetFilters()
 
 void CDVDVideoCodecFFmpeg::UpdateName()
 {
+  bool isHW = false;
   if(m_pCodecContext->codec->name)
+  {
     m_name = std::string("ff-") + m_pCodecContext->codec->name;
+    if(strstr(m_pCodecContext->codec->name, "v4l2m2m") != NULL)
+      isHW = true;
+  }
   else
     m_name = "ffmpeg";
 
   if(m_pHardware)
+  {
     m_name += "-" + m_pHardware->Name();
-
-  m_processInfo.SetVideoDecoderName(m_name, m_pHardware ? true : false);
+    isHW = true;
+  }
+  m_processInfo.SetVideoDecoderName(m_name, isHW ? true : false);
 
   CLog::Log(LOGDEBUG, "CDVDVideoCodecFFmpeg - Updated codec: %s", m_name.c_str());
 }
@@ -748,8 +804,14 @@ CDVDVideoCodec::VCReturn CDVDVideoCodecFFmpeg::GetPicture(VideoPicture* pVideoPi
   if (m_pDecodedFrame->interlaced_frame)
     m_interlaced = true;
   else
+  {
     m_interlaced = false;
-
+    if (m_useSoftDecoder)
+    {
+      m_useSoftDecoder = false;
+      return VC_REOPEN;
+    }
+  }
   if (!m_processInfo.GetVideoInterlaced() && m_interlaced)
     m_processInfo.SetVideoInterlaced(m_interlaced);
 

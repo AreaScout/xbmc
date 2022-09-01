@@ -122,6 +122,7 @@ externalproject_add(ffmpeg
                       --enable-pthreads
                       --enable-muxer=spdif
                       --enable-muxer=adts
+                      --enable-v4l2-m2m
                       --enable-muxer=asf
                       --enable-muxer=ipod
                       --enable-encoder=ac3
