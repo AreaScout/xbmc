@@ -181,6 +181,12 @@
           </constraints>
           <control type="spinner" format="string" />
         </setting>
+        <setting id="videoplayer.usesoftwaredecoder" type="boolean" label="13468" help="13469">
+          <visible>true</visible>
+          <level>1</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
       </group>
     </category>
   </section>
