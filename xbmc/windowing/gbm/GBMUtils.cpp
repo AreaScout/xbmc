@@ -74,25 +74,29 @@ CGBMUtils::CGBMDevice::CGBMSurface::CGBMSurface(gbm_surface* surface) : m_surfac
 {
 }
 
+#define MAX_SURFACE_BUFFERS 3
 CGBMUtils::CGBMDevice::CGBMSurface::CGBMSurfaceBuffer& CGBMUtils::CGBMDevice::CGBMSurface::
     LockFrontBuffer()
 {
-  m_buffers.emplace(std::make_unique<CGBMSurfaceBuffer>(m_surface));
+ /* Fix for ODROID M1/M1S, gbm_surface_has_free_buffers doesn't seem to report if there
+  * are no buffers available instead GEM buffers are running out, so we manually empty
+  * the buffers here for a maximum of three
+  */
+  std::call_once(
+     flag, [this]() { CLog::Log(LOGDEBUG, "CGBMUtils - using {} buffers", MAX_SURFACE_BUFFERS); });
 
-  if (!static_cast<bool>(gbm_surface_has_free_buffers(m_surface)))
+  if (m_buffers.size() >= MAX_SURFACE_BUFFERS)
   {
-    /*
-     * We want to use call_once here because we want it to be logged the first time that
-     * we have to release buffers. This means that the maximum amount of buffers had been reached.
-     * For mesa this should be 4 buffers but it may vary across other implementations.
-     */
-    std::call_once(
-        flag, [this]() { CLog::Log(LOGDEBUG, "CGBMUtils - using {} buffers", m_buffers.size()); });
-
-    m_buffers.pop();
+    while (!m_buffers.empty())
+    {
+      m_buffers.front();
+      m_buffers.pop();
+    }
   }
 
-  return *m_buffers.back();
+  m_buffers.emplace(std::make_unique<CGBMSurfaceBuffer>(m_surface));
+
+  return *m_buffers.front();
 }
 
 CGBMUtils::CGBMDevice::CGBMSurface::CGBMSurfaceBuffer::CGBMSurfaceBuffer(gbm_surface* surface)
