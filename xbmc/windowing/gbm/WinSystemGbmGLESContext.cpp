@@ -38,7 +38,7 @@ using namespace KODI::WINDOWING::GBM;
 using namespace std::chrono_literals;
 
 CWinSystemGbmGLESContext::CWinSystemGbmGLESContext()
-: CWinSystemGbmEGLContext(EGL_PLATFORM_GBM_MESA, "EGL_MESA_platform_gbm")
+: CWinSystemGbmEGLContext(EGL_PLATFORM_GBM_MESA, "EGL_KHR_platform_gbm")
 {}
 
 void CWinSystemGbmGLESContext::Register()
