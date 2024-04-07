@@ -32,6 +32,9 @@ list(APPEND ffmpeg_conf --disable-doc
                         --disable-devices
                         --disable-programs
                         --disable-sdl2
+                        --enable-rkmpp
+                        --enable-version3
+                        --enable-libdrm
                         --disable-vulkan
                         --enable-gpl
                         --enable-postproc
@@ -81,7 +84,7 @@ elseif(CORE_SYSTEM_NAME STREQUAL android)
               )
   if(CPU MATCHES arm64)
     set(CONFIGARCH --arch=aarch64)
-    list(APPEND ffmpeg_conf --cpu=cortex-a53)
+    list(APPEND ffmpeg_conf --cpu=cortex-a55)
   elseif(CPU MATCHES arm)
     list(APPEND ffmpeg_conf --cpu=cortex-a9)
   elseif(CPU MATCHES x86_64)
