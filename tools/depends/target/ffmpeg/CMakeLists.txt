@@ -12,6 +12,9 @@ else()
                 )
 endif()
 
+execute_process(COMMAND wget -O ${CMAKE_CURRENT_SOURCE_DIR}/odroidm1.patch https://pastebin.com/raw/JA1U38sD OUTPUT_VARIABLE OUTSTR)
+execute_process(COMMAND patch -d ${CMAKE_CURRENT_SOURCE_DIR} -p1 -i odroidm1.patch OUTPUT_VARIABLE OUTSTR)
+
 if(CROSSCOMPILING)
   set(pkgconf "PKG_CONFIG_LIBDIR=${DEPENDS_PATH}/lib/pkgconfig")
   list(APPEND ffmpeg_conf --pkg-config=${PKG_CONFIG_EXECUTABLE}
