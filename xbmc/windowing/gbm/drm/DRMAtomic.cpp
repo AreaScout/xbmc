@@ -100,6 +100,8 @@ void CDRMAtomic::DrmAtomicCommit(int fb_id, int flags, bool rendered, bool video
     AddProperty(m_gui_plane, "SRC_H", m_height << 16);
     AddProperty(m_gui_plane, "CRTC_X", 0);
     AddProperty(m_gui_plane, "CRTC_Y", 0);
+    AddProperty(m_gui_plane, "zpos", 1);
+    AddProperty(m_video_plane, "zpos", 0);
     //! @todo: disabled until upstream kernel changes are merged
     // if (DisplayHardwareScalingEnabled())
     // {
